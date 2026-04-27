@@ -1,0 +1,68 @@
+---
+title: "Data Visualization"
+format: html
+---
+
+## Load packages
+
+```{r}
+library(readr)
+library(here)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(janitor)
+
+library(ggplot2)
+
+library(plotly)
+```
+
+## Load the data
+
+```{r}
+delta_visits_raw <- read_csv('https://tinyurl.com/delta-activities')
+```
+
+## Explore the data
+
+```{r}
+colnames(delta_visits_raw)
+glimpse(delta_visits_raw)
+```
+
+## Clean up the data
+
+```{r}
+delta_visits <- delta_visits_raw %>% 
+    clean_names()
+delta_visits
+```
+
+```{r}
+visits_long <- delta_visits %>% 
+    pivot_longer(
+        col = c(sm_boat, med_boat, lrg_boat, bank_angler, scientist, cars),
+        names_to = 'visitor_type',
+        values_to = 'quantity'
+    ) %>% 
+        rename(restore_loc = eco_restore_approximate_location) %>% 
+        select(-notes)
+glimpse(visits_long)
+```
+
+
+```{r}
+daily_visits_loc <- visits_long %>% 
+    group_by(restore_loc, date, visitor_type) %>% 
+    summarize(daily_visits = sum(quantity), .groups = 'drop')
+```
+
+## Make some plots
+
+
+```{r}
+ggplot(daily_visits_loc, 
+    aes(x = restore_loc, y = daily_visits)) + 
+        geom_col()
+```
